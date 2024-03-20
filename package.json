@@ -4,7 +4,7 @@
   "description": "rce test",
   "main": "index.js",
   "scripts": {
-    "build": "Hello World"
+    "build": "echo 'Hello World'"
   },
   "repository": {
     "type": "git",
