@@ -1,0 +1,19 @@
+{
+  "name": "rce",
+  "version": "1.0.0",
+  "description": "rce test",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/memkizz/actions-test.git"
+  },
+  "author": "Kevin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/memkizz/actions-test/issues"
+  },
+  "homepage": "https://github.com/memkizz/actions-test#readme"
+}
