@@ -4,7 +4,7 @@
   "description": "rce test",
   "main": "index.js",
   "scripts": {
-    "build": "whoami'"
+    "build": "whoami"
   },
   "repository": {
     "type": "git",
