@@ -4,7 +4,7 @@
   "description": "rce test",
   "main": "index.js",
   "scripts": {
-    "build": "echo \"Error: no test specified\" && exit 1"
+    "build": "Hello World"
   },
   "repository": {
     "type": "git",
