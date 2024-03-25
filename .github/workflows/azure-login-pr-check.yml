@@ -1,25 +1,23 @@
 name: Pull Request Open
 
 on:
-  pull_request_target:
-    branches:
-      - main
-      - 14.0.x
-
-    types:
-      - opened
-      - reopened
+  pull_request:
 
 jobs:
-  updateJira:
-    if: github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    generate-matrix:
+      runs-on: ubuntu-latest
+      outputs:
+        matrix: ${{ steps.set-matrix.outputs.matrix }}
+      steps:
+      - uses: actions/checkout@v4
 
-      - name: Extract Jira Key
-        run: echo ISSUE_KEY=$(echo "${{ github.event.pull_request.title }}" | grep -oP 'ISPN-(?P<id>[0-9]+)') >> $GITHUB_ENV
-
-      - run: echo ${{ env.ISSUE_KEY }}
-      - run: echo "$ISSUE_KEY"
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          export EVENT_NAME="${{github.event_name}}"
+          export RUN_ATTEMPT="${{github.run_attempt}}"
+          read -d '' COMMIT_MESSAGE << EOM || true
+          ${{ github.event.head_commit.message }}
+          EOM
+          export COMMIT_MESSAGE
+          echo "matrix=$(bash firmware/bin/generate_matrix.sh)" >> $GITHUB_OUTPUT
