@@ -1,23 +1,60 @@
-name: Pull Request Open
+name: PR CHECKER
 
 on:
-  pull_request:
+  pull_request_target:
+    branches:
+      - main
+      - 'branch*'
+
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+
+concurrency:
+  group: PR-CHECKER-${{ github.event.number }}
+  cancel-in-progress: false
+
+permissions:
+  checks: write
+  actions: write
+  contents: write
+  deployments: write
+  discussions: write
+  issues: write
+  packages: write
+  pages: write
+  pull-requests: write
+  repository-projects: write
+  security-events: write
+  statuses: write
 
 jobs:
-    generate-matrix:
-      runs-on: ubuntu-latest
-      outputs:
-        matrix: ${{ steps.set-matrix.outputs.matrix }}
-      steps:
-      - uses: actions/checkout@v4
 
-      - name: Set matrix
-        id: set-matrix
+  sync-checker:
+    runs-on: ubuntu-latest
+    if: >
+      !contains(github.event.pull_request.title, '(sync #') &&
+      !contains(github.event.pull_request.labels.*.name, 'sync') &&
+      (!startsWith(github.head_ref, github.base_ref) || !contains(github.head_ref, '-sync-'))
+    name: SYNC CHECKER
+    outputs:
+      BACKPORT_SOURCE_PR: ${{ steps.backport_assign.outputs.ORI_PR }}
+    steps:
+      - run: echo "Normal PR."
+
+      - name: backport assign
+        id: backport_assign
+        if: startsWith(github.head_ref, 'mergify/bp/') && github.event.action == 'opened'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+          REPO: ${{ github.repository }}
         run: |
-          export EVENT_NAME="${{github.event_name}}"
-          export RUN_ATTEMPT="${{github.run_attempt}}"
-          read -d '' COMMIT_MESSAGE << EOM || true
-          ${{ github.event.head_commit.message }}
-          EOM
-          export COMMIT_MESSAGE
-          echo "matrix=$(bash generate_matrix.sh)"
+          ORI_PR=$(echo "${{ github.event.pull_request.title }}" | grep -oP '\(backport #\K\d+' | tail -n 1)
+          author=$(gh pr view ${ORI_PR} -R ${REPO} --json author -q '.author.login')
+          if [[ ! "${author}" =~ "mergify" ]]; then
+            gh pr edit ${PR_NUMBER} -R ${REPO} --add-assignee ${author} || true
+            echo "ORI_PR=${ORI_PR}" >> $GITHUB_OUTPUT
+          fi
